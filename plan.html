@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WanderPlan – Plan a Trip</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Wander<span>Plan</span> ✈</div>
+  <ul class="nav-links">
+    <li><a href="destinations.html">Destinations</a></li>
+    <li><a href="plan.html" class="active">Plan a Trip</a></li>
+    <li><a href="gallery.html">Gallery</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+  </ul>
+</nav>
+
+<div class="page-container">
+
+  <div style="max-width:700px;margin:0 auto">
+
+    <h2 class="section-title">Plan Your Trip ✈</h2>
+    <p class="section-sub">Fill in your trip details and get an instant budget estimate.</p>
+
+    <div class="card" style="padding:2rem;margin-bottom:2rem">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Destination</label>
+          <input type="text" id="dest" placeholder="e.g. Bali, Indonesia" oninput="calcBudget()"/>
+        </div>
+        <div class="form-group">
+          <label>Trip Type</label>
+          <select id="trip-type" onchange="calcBudget()">
+            <option value="">Select type</option>
+            <option>Beach Holiday</option>
+            <option>Mountain Trek</option>
+            <option>City Sightseeing</option>
+            <option>Heritage Tour</option>
+            <option>Nature & Wildlife</option>
+            <option>Honeymoon</option>
+            <option>Family Vacation</option>
+            <option>Solo Adventure</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="start-date" oninput="calcBudget()"/>
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="end-date" oninput="calcBudget()"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Number of Travellers</label>
+          <input type="number" id="travellers" min="1" max="50" value="2" placeholder="2" oninput="calcBudget()"/>
+        </div>
+        <div class="form-group">
+          <label>Budget per Person (₹)</label>
+          <input type="number" id="budget-pp" min="1000" placeholder="e.g. 25000" oninput="calcBudget()"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Accommodation</label>
+          <select id="accommodation" onchange="calcBudget()">
+            <option value="budget">Budget (Hostel / Guesthouse)</option>
+            <option value="mid" selected>Mid-range (3-star Hotel)</option>
+            <option value="luxury">Luxury (5-star / Resort)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Transport Mode</label>
+          <select id="transport" onchange="calcBudget()">
+            <option value="bus">Bus / Local</option>
+            <option value="train" selected>Train</option>
+            <option value="flight">Flight</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notes / Special Requirements</label>
+        <textarea id="notes" rows="3" placeholder="Vegetarian food, wheelchair access, anniversary trip…"></textarea>
+      </div>
+
+      <!-- Budget result (live) -->
+      <div class="budget-result" id="budget-result" style="display:none">
+        <div class="total-label">Estimated Total Budget</div>
+        <div class="total-amount" id="total-amount">₹0</div>
+        <div class="budget-breakdown">
+          <div class="budget-row">
+            <div class="br-label">Duration</div>
+            <div class="br-val" id="br-days">– days</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Travellers</div>
+            <div class="br-val" id="br-pax">–</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Per Person</div>
+            <div class="br-val" id="br-pp">₹–</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Accommodation</div>
+            <div class="br-val" id="br-acc">–</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent" style="width:100%;margin-top:1.2rem;font-size:1rem;padding:14px" onclick="saveTrip()">
+        Save Trip to Dashboard ✓
+      </button>
+
+    </div>
+
+    <!-- Standalone budget calculator -->
+    <h2 class="section-title" style="margin-top:2rem">Quick Budget Calculator 🧮</h2>
+    <p class="section-sub">Just want a quick estimate? Use the calculator below.</p>
+
+    <div class="calculator-card">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Days</label>
+          <input type="number" id="calc-days" min="1" value="5" oninput="standaloneCalc()"/>
+        </div>
+        <div class="form-group">
+          <label>People</label>
+          <input type="number" id="calc-pax" min="1" value="2" oninput="standaloneCalc()"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Daily stay per person (₹)</label>
+          <input type="number" id="calc-stay" value="2000" oninput="standaloneCalc()"/>
+        </div>
+        <div class="form-group">
+          <label>Daily food per person (₹)</label>
+          <input type="number" id="calc-food" value="800" oninput="standaloneCalc()"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Daily activities per person (₹)</label>
+          <input type="number" id="calc-act" value="500" oninput="standaloneCalc()"/>
+        </div>
+        <div class="form-group">
+          <label>One-time transport (₹)</label>
+          <input type="number" id="calc-transport" value="5000" oninput="standaloneCalc()"/>
+        </div>
+      </div>
+
+      <div class="budget-result">
+        <div class="total-label">Estimated Total</div>
+        <div class="total-amount" id="calc-total">₹0</div>
+        <div class="budget-breakdown">
+          <div class="budget-row">
+            <div class="br-label">Stay</div>
+            <div class="br-val" id="calc-stay-out">₹0</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Food</div>
+            <div class="br-val" id="calc-food-out">₹0</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Activities</div>
+            <div class="br-val" id="calc-act-out">₹0</div>
+          </div>
+          <div class="budget-row">
+            <div class="br-label">Transport</div>
+            <div class="br-val" id="calc-trans-out">₹0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 <span>WanderPlan</span>. Made with ❤ for travellers.</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  requireLogin();
+
+  // Pre-fill destination from URL param
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('dest')) document.getElementById('dest').value = params.get('dest');
+
+  const accomCost = { budget: 800, mid: 2500, luxury: 6000 };
+  const transportAdd = { bus: 0, train: 1500, flight: 5000 };
+
+  function calcBudget() {
+    const start  = document.getElementById('start-date').value;
+    const end    = document.getElementById('end-date').value;
+    const pax    = parseInt(document.getElementById('travellers').value) || 0;
+    const pp     = parseInt(document.getElementById('budget-pp').value) || 0;
+    const acc    = document.getElementById('accommodation').value;
+    const trans  = document.getElementById('transport').value;
+
+    if (!start || !end || pax < 1) {
+      document.getElementById('budget-result').style.display = 'none'; return;
+    }
+
+    const days = Math.max(1, Math.ceil((new Date(end) - new Date(start)) / 86400000));
+    const accTotal = accomCost[acc] * days * pax;
+    const transTotal = (transportAdd[trans] + 500) * pax;
+    const ppBase = pp > 0 ? pp * pax : (accomCost[acc] + 800) * days;
+    const total = Math.max(ppBase, accTotal) + transTotal;
+
+    document.getElementById('budget-result').style.display = 'block';
+    document.getElementById('total-amount').textContent  = '₹' + total.toLocaleString('en-IN');
+    document.getElementById('br-days').textContent = days + ' day' + (days > 1 ? 's' : '');
+    document.getElementById('br-pax').textContent  = pax + ' traveller' + (pax > 1 ? 's' : '');
+    document.getElementById('br-pp').textContent   = pp > 0 ? '₹' + pp.toLocaleString('en-IN') : 'Auto-estimated';
+    document.getElementById('br-acc').textContent  = acc === 'budget' ? 'Budget' : acc === 'mid' ? 'Mid-range' : 'Luxury';
+  }
+
+  function saveTrip() {
+    const dest   = document.getElementById('dest').value.trim();
+    const type   = document.getElementById('trip-type').value;
+    const start  = document.getElementById('start-date').value;
+    const end    = document.getElementById('end-date').value;
+    const pax    = document.getElementById('travellers').value;
+    const pp     = document.getElementById('budget-pp').value;
+    const notes  = document.getElementById('notes').value.trim();
+
+    if (!dest || !start || !end || !pax) {
+      showToast('Please fill in destination, dates and travellers.'); return;
+    }
+
+    const trips = JSON.parse(localStorage.getItem('wp_trips') || '[]');
+    const user  = JSON.parse(localStorage.getItem('wp_current_user') || '{}');
+    trips.push({
+      id: Date.now(), destination: dest, type, startDate: start,
+      endDate: end, travellers: pax, budgetPP: pp, notes,
+      username: user.username
+    });
+    localStorage.setItem('wp_trips', JSON.stringify(trips));
+    showToast('Trip saved! Check your dashboard. 🗺');
+    setTimeout(() => window.location.href = 'dashboard.html', 1200);
+  }
+
+  function standaloneCalc() {
+    const days  = parseInt(document.getElementById('calc-days').value) || 0;
+    const pax   = parseInt(document.getElementById('calc-pax').value) || 0;
+    const stay  = parseInt(document.getElementById('calc-stay').value) || 0;
+    const food  = parseInt(document.getElementById('calc-food').value) || 0;
+    const act   = parseInt(document.getElementById('calc-act').value) || 0;
+    const trans = parseInt(document.getElementById('calc-transport').value) || 0;
+
+    const stayT  = stay * days * pax;
+    const foodT  = food * days * pax;
+    const actT   = act  * days * pax;
+    const total  = stayT + foodT + actT + trans;
+
+    document.getElementById('calc-total').textContent     = '₹' + total.toLocaleString('en-IN');
+    document.getElementById('calc-stay-out').textContent  = '₹' + stayT.toLocaleString('en-IN');
+    document.getElementById('calc-food-out').textContent  = '₹' + foodT.toLocaleString('en-IN');
+    document.getElementById('calc-act-out').textContent   = '₹' + actT.toLocaleString('en-IN');
+    document.getElementById('calc-trans-out').textContent = '₹' + trans.toLocaleString('en-IN');
+  }
+
+  standaloneCalc();
+</script>
+</body>
+</html>

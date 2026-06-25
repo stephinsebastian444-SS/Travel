@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WanderPlan – Destinations</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Wander<span>Plan</span> ✈</div>
+  <ul class="nav-links">
+    <li><a href="destinations.html" class="active">Destinations</a></li>
+    <li><a href="plan.html">Plan a Trip</a></li>
+    <li><a href="gallery.html">Gallery</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-content">
+    <h1>Find Your Next <span>Adventure</span></h1>
+    <p>Explore handpicked destinations from across the globe. Filter by category and start planning.</p>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search destinations..." oninput="filterDest()"/>
+      <button onclick="filterDest()">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-container">
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs" id="filter-tabs">
+    <button class="filter-tab active" onclick="setFilter('All', this)">All</button>
+    <button class="filter-tab" onclick="setFilter('Beach', this)">🏖 Beach</button>
+    <button class="filter-tab" onclick="setFilter('Mountain', this)">⛰ Mountain</button>
+    <button class="filter-tab" onclick="setFilter('City', this)">🏙 City</button>
+    <button class="filter-tab" onclick="setFilter('Heritage', this)">🏛 Heritage</button>
+    <button class="filter-tab" onclick="setFilter('Nature', this)">🌿 Nature</button>
+  </div>
+
+  <p class="section-sub" id="result-count"></p>
+
+  <!-- Destinations grid -->
+  <div class="dest-grid" id="dest-grid"></div>
+
+</div>
+
+<footer>
+  <p>© 2025 <span>WanderPlan</span>. Made with ❤ for travellers.</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  requireLogin();
+
+  const destinations = [
+    {
+      id: 1, name: 'Bali, Indonesia', category: 'Beach',
+      desc: 'Tropical paradise with stunning temples, lush rice terraces and crystal-clear waters.',
+      img: 'images/bali.jpg', price: '₹45,000', rating: 4.8, days: '5–7 days'
+    },
+    {
+      id: 2, name: 'Paris, France', category: 'City',
+      desc: 'The city of lights — iconic Eiffel Tower, world-class cuisine, and timeless romance.',
+      img: 'images/paris.jpg', price: '₹1,20,000', rating: 4.9, days: '4–6 days'
+    },
+    {
+      id: 3, name: 'Manali, India', category: 'Mountain',
+      desc: 'Snow-capped peaks, pine forests and adventure sports in the Himalayan valley.',
+      img: 'images/manali.jpg', price: '₹18,000', rating: 4.6, days: '4–5 days'
+    },
+    {
+      id: 4, name: 'Maldives', category: 'Beach',
+      desc: 'Overwater bungalows, turquoise lagoons and the world\'s most pristine coral reefs.',
+      img: 'images/maldives.jpg', price: '₹90,000', rating: 5.0, days: '5–7 days'
+    },
+    {
+      id: 5, name: 'Kerala, India', category: 'Nature',
+      desc: 'God\'s Own Country — backwaters, houseboat stays, and lush green hill stations.',
+      img: 'images/kerala.jpg', price: '₹22,000', rating: 4.7, days: '5–6 days'
+    },
+    {
+      id: 6, name: 'Rome, Italy', category: 'Heritage',
+      desc: 'Walk through 2,000 years of history — Colosseum, Vatican, and the Trevi Fountain.',
+      img: 'images/rome.jpg', price: '₹1,10,000', rating: 4.8, days: '4–5 days'
+    },
+    {
+      id: 7, name: 'Rajasthan, India', category: 'Heritage',
+      desc: 'Royal palaces, golden deserts, vibrant bazaars and majestic forts await you.',
+      img: 'images/rajasthan.jpg', price: '₹25,000', rating: 4.6, days: '6–8 days'
+    },
+    {
+      id: 8, name: 'Coorg, India', category: 'Nature',
+      desc: 'The Scotland of India — misty coffee plantations, waterfalls and serene landscapes.',
+      img: 'images/coorg.jpg', price: '₹14,000', rating: 4.5, days: '3–4 days'
+    },
+    {
+      id: 9, name: 'Tokyo, Japan', category: 'City',
+      desc: 'Ultra-modern metropolis blending futuristic technology with ancient temples and culture.',
+      img: 'images/tokyo.jpg', price: '₹1,50,000', rating: 4.9, days: '7–8 days'
+    },
+  ];
+
+  let currentFilter = 'All';
+
+  function setFilter(cat, el) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    filterDest();
+  }
+
+  function filterDest() {
+    const q = document.getElementById('search-input').value.trim().toLowerCase();
+    let filtered = destinations.filter(d => {
+      const matchCat = currentFilter === 'All' || d.category === currentFilter;
+      const matchQ   = d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+    renderDest(filtered);
+  }
+
+  function renderDest(list) {
+    const grid = document.getElementById('dest-grid');
+    const count = document.getElementById('result-count');
+    count.textContent = list.length + ' destination' + (list.length !== 1 ? 's' : '') + ' found';
+    if (list.length === 0) {
+      grid.innerHTML = '<p style="color:var(--muted);text-align:center;grid-column:1/-1;padding:3rem">No destinations match your search.</p>';
+      return;
+    }
+    grid.innerHTML = list.map(d => `
+      <div class="dest-card fadeUp">
+        <div class="dest-img-wrap">
+          <img src="${d.img}" alt="${d.name}" onerror="this.src='images/placeholder.jpg'"/>
+          <span class="dest-badge">${d.category}</span>
+        </div>
+        <div class="dest-info">
+          <h3>${d.name}</h3>
+          <p class="location">📍 ${d.name.split(',')[1] ? d.name.split(',')[1].trim() : d.name} &nbsp;⭐ ${d.rating} &nbsp;🕐 ${d.days}</p>
+          <p class="desc">${d.desc}</p>
+          <div class="dest-meta">
+            <span class="dest-price">From ${d.price}</span>
+            <a href="plan.html?dest=${encodeURIComponent(d.name)}" class="btn btn-primary">Plan Trip</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  filterDest();
+</script>
+</body>
+</html>

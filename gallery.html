@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WanderPlan – Gallery</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Wander<span>Plan</span> ✈</div>
+  <ul class="nav-links">
+    <li><a href="destinations.html">Destinations</a></li>
+    <li><a href="plan.html">Plan a Trip</a></li>
+    <li><a href="gallery.html" class="active">Gallery</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+  </ul>
+</nav>
+
+<div class="page-container">
+
+  <h2 class="section-title">Destination Gallery 📸</h2>
+  <p class="section-sub">A visual journey around the world. Click any photo to view it full-size.</p>
+
+  <!-- Filter -->
+  <div class="filter-tabs" id="gallery-filters">
+    <button class="filter-tab active" onclick="filterGallery('All', this)">All</button>
+    <button class="filter-tab" onclick="filterGallery('Beach', this)">🏖 Beach</button>
+    <button class="filter-tab" onclick="filterGallery('Mountain', this)">⛰ Mountain</button>
+    <button class="filter-tab" onclick="filterGallery('City', this)">🏙 City</button>
+    <button class="filter-tab" onclick="filterGallery('Heritage', this)">🏛 Heritage</button>
+    <button class="filter-tab" onclick="filterGallery('Nature', this)">🌿 Nature</button>
+  </div>
+
+  <div class="gallery-grid" id="gallery-grid"></div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt=""/>
+  <span class="lightbox-caption" id="lightbox-caption"></span>
+</div>
+
+<footer>
+  <p>© 2025 <span>WanderPlan</span>. Made with ❤ for travellers.</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  requireLogin();
+
+  const photos = [
+    { src: 'images/bali.jpg',       caption: 'Bali, Indonesia',   cat: 'Beach'    },
+    { src: 'images/maldives.jpg',   caption: 'Maldives',          cat: 'Beach'    },
+    { src: 'images/kerala.jpg',     caption: 'Kerala Backwaters',  cat: 'Nature'   },
+    { src: 'images/coorg.jpg',      caption: 'Coorg, India',       cat: 'Nature'   },
+    { src: 'images/manali.jpg',     caption: 'Manali, Himachal',   cat: 'Mountain' },
+    { src: 'images/rajasthan.jpg',  caption: 'Rajasthan Forts',    cat: 'Heritage' },
+    { src: 'images/rome.jpg',       caption: 'Rome, Italy',        cat: 'Heritage' },
+    { src: 'images/paris.jpg',      caption: 'Paris, France',      cat: 'City'     },
+    { src: 'images/tokyo.jpg',      caption: 'Tokyo, Japan',       cat: 'City'     },
+    { src: 'images/beach2.jpg',     caption: 'Goa, India',         cat: 'Beach'    },
+    { src: 'images/mountain2.jpg',  caption: 'Munnar Hills',       cat: 'Mountain' },
+    { src: 'images/city2.jpg',      caption: 'Dubai, UAE',         cat: 'City'     },
+  ];
+
+  let currentFilter = 'All';
+
+  function filterGallery(cat, el) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderGallery();
+  }
+
+  function renderGallery() {
+    const filtered = currentFilter === 'All' ? photos : photos.filter(p => p.cat === currentFilter);
+    const grid = document.getElementById('gallery-grid');
+    grid.innerHTML = filtered.map((p, i) => `
+      <div class="gallery-item fadeUp" onclick="openLightbox('${p.src}', '${p.caption}')">
+        <img src="${p.src}" alt="${p.caption}" onerror="this.src='images/placeholder.jpg'" loading="lazy"/>
+        <div class="gallery-overlay">
+          <span>📍 ${p.caption}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openLightbox(src, caption) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox-caption').textContent = caption;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox(e) {
+    if (!e || e.target !== document.getElementById('lightbox-img')) {
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  renderGallery();
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WanderPlan – Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">Wander<span>Plan</span> ✈</div>
+  <ul class="nav-links">
+    <li><a href="destinations.html">Destinations</a></li>
+    <li><a href="plan.html">Plan a Trip</a></li>
+    <li><a href="gallery.html">Gallery</a></li>
+    <li><a href="dashboard.html" class="active">Dashboard</a></li>
+    <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+  </ul>
+</nav>
+
+<div class="page-container">
+
+  <!-- Welcome banner -->
+  <div style="background:linear-gradient(120deg,var(--primary) 0%,#1a7a9c 100%);border-radius:var(--radius);padding:2rem 2.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-bottom:4px">Welcome back 👋</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;color:white" id="dash-name">Traveller</h2>
+      <p style="color:rgba(255,255,255,0.65);font-size:0.82rem;margin-top:4px" id="dash-email"></p>
+    </div>
+    <a href="plan.html" class="btn btn-accent">+ Plan New Trip</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <span class="stat-label">Total Trips</span>
+      <span class="stat-val" id="stat-trips">0</span>
+    </div>
+    <div class="stat-card accent">
+      <span class="stat-label">Upcoming</span>
+      <span class="stat-val" id="stat-upcoming">0</span>
+    </div>
+    <div class="stat-card accent2">
+      <span class="stat-label">Destinations</span>
+      <span class="stat-val" id="stat-dest">0</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Travellers Planned</span>
+      <span class="stat-val" id="stat-pax">0</span>
+    </div>
+  </div>
+
+  <!-- Trips list -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+    <h2 class="section-title" style="margin-bottom:0">Your Planned Trips</h2>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="trip-search" placeholder="Search trips…" style="padding:8px 14px;border:1.5px solid #d1dce5;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.85rem;outline:none" oninput="renderTrips()"/>
+    </div>
+  </div>
+
+  <div class="trip-list" id="trip-list"></div>
+
+</div>
+
+<footer>
+  <p>© 2025 <span>WanderPlan</span>. Made with ❤ for travellers.</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  requireLogin();
+
+  const user = JSON.parse(localStorage.getItem('wp_current_user') || '{}');
+  document.getElementById('dash-name').textContent = (user.fname || '') + ' ' + (user.lname || '');
+  document.getElementById('dash-email').textContent = user.email || '';
+
+  function getUserTrips() {
+    const all = JSON.parse(localStorage.getItem('wp_trips') || '[]');
+    return all.filter(t => t.username === user.username);
+  }
+
+  function renderStats(trips) {
+    const now = new Date();
+    const upcoming = trips.filter(t => new Date(t.startDate) >= now).length;
+    const uniqueDest = [...new Set(trips.map(t => t.destination))].length;
+    const totalPax = trips.reduce((s, t) => s + (parseInt(t.travellers) || 0), 0);
+    document.getElementById('stat-trips').textContent    = trips.length;
+    document.getElementById('stat-upcoming').textContent = upcoming;
+    document.getElementById('stat-dest').textContent     = uniqueDest;
+    document.getElementById('stat-pax').textContent      = totalPax;
+  }
+
+  function deleteTrip(id) {
+    if (!confirm('Delete this trip?')) return;
+    let all = JSON.parse(localStorage.getItem('wp_trips') || '[]');
+    all = all.filter(t => t.id !== id);
+    localStorage.setItem('wp_trips', JSON.stringify(all));
+    showToast('Trip removed.');
+    renderTrips();
+  }
+
+  function renderTrips() {
+    const q = (document.getElementById('trip-search').value || '').toLowerCase();
+    const trips = getUserTrips();
+    renderStats(trips);
+    const list = document.getElementById('trip-list');
+
+    const filtered = trips.filter(t =>
+      t.destination.toLowerCase().includes(q) || (t.type || '').toLowerCase().includes(q)
+    );
+
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🗺</div>
+          <p>${trips.length === 0 ? "You haven't planned any trips yet." : "No trips match your search."}</p>
+          <a href="plan.html" class="btn btn-accent">Plan Your First Trip</a>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(t => {
+      const days = t.startDate && t.endDate
+        ? Math.ceil((new Date(t.endDate) - new Date(t.startDate)) / 86400000)
+        : null;
+      const now = new Date();
+      const isUpcoming = t.startDate && new Date(t.startDate) >= now;
+      const totalBudget = t.budgetPP && t.travellers
+        ? '₹' + (parseInt(t.budgetPP) * parseInt(t.travellers)).toLocaleString('en-IN')
+        : '—';
+      return `
+        <div class="trip-item fadeUp">
+          <div style="font-size:2rem">✈</div>
+          <div class="trip-info" style="flex:1">
+            <h4>${t.destination}</h4>
+            <p>
+              ${t.startDate ? '📅 ' + t.startDate : ''}
+              ${t.endDate ? ' → ' + t.endDate : ''}
+              ${days ? ' (' + days + ' days)' : ''}
+            </p>
+          </div>
+          <div class="trip-meta">
+            ${t.type ? `<span class="trip-tag">${t.type}</span>` : ''}
+            <span class="trip-tag">${t.travellers || 1} traveller${t.travellers > 1 ? 's' : ''}</span>
+            ${isUpcoming ? '<span class="trip-tag" style="background:#d1fae5;color:#065f46">Upcoming</span>' : ''}
+            <span class="trip-budget">${totalBudget}</span>
+            <button class="btn-del" onclick="deleteTrip(${t.id})">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  renderTrips();
+</script>
+</body>
+</html>
